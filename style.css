@@ -1,0 +1,501 @@
+/* Basic Reset & Body Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #1a1a1a; /* Dark background */
+    color: #f0f0f0; /* Light text for contrast */
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* Header */
+header {
+    background: #0d0d0d;
+    color: #fff;
+    padding: 1.5rem 0;
+    text-align: center;
+    border-bottom: 5px solid #E74C3C; /* Bold red border */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    position: relative; /* Needed for absolute positioning of points */
+}
+
+header h1 {
+    margin: 0;
+    font-size: 3.2em;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #E74C3C;
+}
+
+header p {
+    font-size: 1.2em;
+    max-width: 800px;
+    margin: 15px auto;
+    color: #bbb;
+}
+
+/* Navigation Buttons */
+nav {
+    margin-top: 25px;
+}
+
+.nav-btn {
+    background: #222;
+    color: #fff;
+    padding: 12px 25px;
+    border: 2px solid #444;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 0 8px;
+    font-size: 1.1em;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.nav-btn:hover {
+    background: #E74C3C;
+    border-color: #E74C3C;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+}
+
+.nav-btn.active-nav {
+    background: #E74C3C;
+    border-color: #E74C3C;
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+}
+
+/* Points Display */
+.points-display {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #2b2b2b;
+    color: #E74C3C;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.3em;
+    border: 1px solid #3a3a3a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    display: none; /* Hidden by default */
+}
+
+
+/* Main Content */
+main {
+    padding: 30px;
+    max-width: 900px;
+    margin: 30px auto;
+    background: #222;
+    border-radius: 12px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    position: relative; /* For the absolute positioning of the add person button */
+}
+
+/* Page Sections */
+.page-section {
+    display: none;
+    animation: fadeIn 0.8s ease-out;
+}
+
+.page-section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.section-content {
+    margin-bottom: 40px;
+}
+
+.section-content h2 {
+    color: #E74C3C;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #444;
+    padding-bottom: 10px;
+}
+
+.section-content p, .section-content ul {
+    color: #ccc;
+    font-size: 1.1em;
+}
+
+.section-content ul {
+    list-style-type: disc;
+    margin-left: 20px;
+    padding-left: 0;
+}
+.section-content ul li {
+    margin-bottom: 8px;
+}
+
+
+/* Buttons (General) */
+.btn {
+    display: inline-block;
+    background: #E74C3C; /* Primary Red */
+    color: #fff;
+    padding: 12px 28px;
+    text-decoration: none;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    margin: 5px;
+}
+
+.btn:hover {
+    background: #C0392B;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3), 0 0 15px rgba(231, 76, 60, 0.6);
+}
+
+.btn:disabled {
+    background-color: #555;
+    color: #999;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 25px;
+    background: #0d0d0d;
+    color: #888;
+    margin-top: 40px;
+    border-top: 5px solid #E74C3C;
+    font-size: 0.9em;
+}
+
+/* MDT Specific Styles (from previous version) */
+.search-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+#searchInput {
+    width: 70%;
+    padding: 12px 15px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    background-color: #333;
+    color: #eee;
+    font-size: 1.1em;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+#searchInput:focus {
+    border-color: #E74C3C;
+}
+.profile-card {
+    background-color: #2b2b2b;
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+.profile-card img {
+    max-width: 120px;
+    max-height: 120px;
+    border-radius: 50%;
+    border: 3px solid #E74C3C;
+    margin-bottom: 15px;
+    object-fit: cover;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+.profile-card h3 {
+    color: #E74C3C;
+    font-size: 2em;
+    margin-bottom: 10px;
+    text-align: center;
+}
+.profile-info p {
+    margin: 8px 0;
+    color: #ccc;
+    font-size: 1.1em;
+}
+.profile-info span {
+    font-weight: bold;
+    color: #f0f0f0;
+}
+
+.profile-section-title {
+    color: #E74C3C;
+    margin-top: 25px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+    font-size: 1.5em;
+}
+.add-item-form {
+    background-color: #2b2b2b;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #3a3a3a;
+    margin-top: 15px;
+}
+.add-item-form input[type="text"],
+.add-item-form textarea {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #555;
+    border-radius: 5px;
+    background-color: #3e3e3e;
+    color: #eee;
+}
+.add-item-form input[type="text"]::placeholder,
+.add-item-form textarea::placeholder {
+    color: #aaa;
+}
+.add-item-form .btn {
+    width: auto;
+    margin-top: 5px;
+}
+.record-item {
+    background-color: #333;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 10px;
+    word-wrap: break-word; /* Ensure long text wraps */
+    display: flex; /* For aligning text and delete button */
+    justify-content: space-between; /* Space out content */
+    align-items: center; /* Vertically align */
+}
+.record-item strong {
+    color: #E74C3C;
+}
+.record-item p {
+    margin: 5px 0;
+    color: #ccc;
+}
+.record-item .btn { /* Style for delete button within record item */
+    padding: 5px 10px;
+    font-size: 0.8em;
+    background-color: #C0392B; /* Darker red for delete */
+}
+.record-item .btn:hover {
+    background-color: #E74C3C;
+}
+
+/* New Person Form Overlay (from previous version) */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    display: none; /* Hidden by default */
+}
+.new-person-form, .add-user-form { /* Apply same base styles to add-user-form */
+    background: #222;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    animation: slideIn 0.4s ease-out;
+    border: 1px solid #333;
+}
+.new-person-form h3, .add-user-form h3 { /* Apply same header styles */
+    color: #E74C3C;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 2em;
+}
+.new-person-form label, .add-user-form label { /* Apply same label styles */
+    display: block;
+    margin-bottom: 8px;
+    color: #f0f0f0;
+    font-weight: bold;
+}
+.new-person-form input[type="text"],
+.new-person-form input[type="number"],
+.new-person-form input[type="url"],
+.add-user-form input[type="text"], /* Apply to new user inputs */
+.add-user-form input[type="password"] { /* Apply to new user inputs */
+    width: calc(100% - 20px);
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #555;
+    border-radius: 6px;
+    background-color: #3e3e3e;
+    color: #eee;
+    font-size: 1em;
+    outline: none;
+}
+.new-person-form input[type="text"]::placeholder,
+.new-person-form input[type="url"]::placeholder,
+.add-user-form input[type="text"]::placeholder,
+.add-user-form input[type="password"]::placeholder { /* Apply to new user placeholders */
+    color: #aaa;
+}
+.new-person-form .form-actions, .add-user-form .form-actions { /* Apply same form action styles */
+    text-align: right;
+    margin-top: 20px;
+}
+.new-person-form .btn, .add-user-form .btn { /* Apply same button styles */
+    margin-left: 10px;
+}
+.new-person-form .btn.cancel, .add-user-form .btn.cancel { /* Apply same cancel button styles */
+    background-color: #666;
+}
+.new-person-form .btn.cancel:hover, .add-user-form .btn.cancel:hover { /* Apply same cancel button hover styles */
+    background-color: #777;
+}
+
+#addPersonBtn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: #E74C3C;
+    color: #fff;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    font-size: 2.5em;
+    line-height: 1;
+    text-align: center;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.2s, transform 0.2s;
+    display: none; /* Hidden by default, shown when logged in to MDT */
+}
+#addPersonBtn:hover {
+    background-color: #C0392B;
+    transform: scale(1.05);
+}
+
+.points-display {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #2b2b2b;
+    color: #E74C3C;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.3em;
+    border: 1px solid #3a3a3a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    display: none; /* Hidden by default */
+}
+
+/* Login Form Styles (from previous version) */
+.login-form {
+    text-align: center;
+    padding: 30px;
+    background-color: #2b2b2b;
+    border-radius: 10px;
+    max-width: 400px;
+    margin: 50px auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    border: 1px solid #3a3a3a;
+}
+.login-form h2 {
+    color: #E74C3C;
+    margin-bottom: 25px;
+    font-size: 2.2em;
+}
+.login-form input[type="text"],
+.login-form input[type="password"] {
+    width: calc(100% - 20px);
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #555;
+    border-radius: 6px;
+    background-color: #3e3e3e;
+    color: #eee;
+    font-size: 1em;
+    outline: none;
+}
+.login-form input[type="text"]::placeholder,
+.login-form input[type="password"]::placeholder {
+    color: #aaa;
+}
+.login-form .btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.2em;
+    margin-top: 10px;
+}
+#loginMessage {
+    color: #E74C3C;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+/* Admin Panel Styles (New) */
+.admin-controls {
+    text-align: center;
+    margin-bottom: 25px;
+}
+.user-list {
+    margin-top: 20px;
+    background-color: #2b2b2b;
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid #3a3a3a;
+}
+.user-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333;
+    border: 1px solid #444;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+.user-item:last-child {
+    margin-bottom: 0;
+}
+.user-item span {
+    color: #f0f0f0;
+    font-size: 1.1em;
+}
+.user-item strong {
+    color: #E74C3C;
+}
+.user-item .btn {
+    padding: 8px 15px;
+    font-size: 0.9em;
+    background-color: #C0392B;
+}
+.user-item .btn:hover {
+    background-color: #E74C3C;
+}
+.user-item .btn:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
