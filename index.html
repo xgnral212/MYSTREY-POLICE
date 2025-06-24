@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Police RP - MDT System</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Add specific styles for the MDT layout here for quick access */
+        .search-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #searchInput {
+            width: 70%;
+            padding: 12px 15px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background-color: #333;
+            color: #eee;
+            font-size: 1.1em;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        #searchInput:focus {
+            border-color: #E74C3C;
+        }
+        .profile-card {
+            background-color: #2b2b2b;
+            border: 1px solid #3a3a3a;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .profile-card img {
+            max-width: 120px;
+            max-height: 120px;
+            border-radius: 50%;
+            border: 3px solid #E74C3C;
+            margin-bottom: 15px;
+            object-fit: cover;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .profile-card h3 {
+            color: #E74C3C;
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .profile-info p {
+            margin: 8px 0;
+            color: #ccc;
+            font-size: 1.1em;
+        }
+        .profile-info span {
+            font-weight: bold;
+            color: #f0f0f0;
+        }
+
+        .profile-section-title {
+            color: #E74C3C;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+            font-size: 1.5em;
+        }
+        .add-item-form {
+            background-color: #2b2b2b;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
+            margin-top: 15px;
+        }
+        .add-item-form input[type="text"],
+        .add-item-form textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background-color: #3e3e3e;
+            color: #eee;
+        }
+        .add-item-form input[type="text"]::placeholder,
+        .add-item-form textarea::placeholder {
+            color: #aaa;
+        }
+        .add-item-form .btn {
+            width: auto;
+            margin-top: 5px;
+        }
+        .record-item {
+            background-color: #333;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            word-wrap: break-word; /* Ensure long text wraps */
+            display: flex; /* For aligning text and delete button */
+            justify-content: space-between; /* Space out content */
+            align-items: center; /* Vertically align */
+        }
+        .record-item strong {
+            color: #E74C3C;
+        }
+        .record-item p {
+            margin: 5px 0;
+            color: #ccc;
+        }
+        .record-item .btn { /* Style for delete button within record item */
+            padding: 5px 10px;
+            font-size: 0.8em;
+            background-color: #C0392B; /* Darker red for delete */
+        }
+        .record-item .btn:hover {
+            background-color: #E74C3C;
+        }
+
+        .no-records {
+            color: #aaa;
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* New Person Form Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none; /* Hidden by default */
+        }
+        .new-person-form, .add-user-form {
+            background: #222;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            animation: slideIn 0.4s ease-out;
+            border: 1px solid #333;
+        }
+        .new-person-form h3, .add-user-form h3 {
+            color: #E74C3C;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        .new-person-form label, .add-user-form label {
+            display: block;
+            margin-bottom: 8px;
+            color: #f0f0f0;
+            font-weight: bold;
+        }
+        .new-person-form input[type="text"],
+        .new-person-form input[type="number"],
+        .new-person-form input[type="url"],
+        .add-user-form input[type="text"],
+        .add-user-form input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #555;
+            border-radius: 6px;
+            background-color: #3e3e3e;
+            color: #eee;
+            font-size: 1em;
+            outline: none;
+        }
+        .new-person-form input[type="text"]::placeholder,
+        .new-person-form input[type="url"]::placeholder,
+        .add-user-form input[type="text"]::placeholder,
+        .add-user-form input[type="password"]::placeholder {
+            color: #aaa;
+        }
+        .new-person-form .form-actions, .add-user-form .form-actions {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .new-person-form .btn, .add-user-form .btn {
+            margin-left: 10px;
+        }
+        .new-person-form .btn.cancel, .add-user-form .btn.cancel {
+            background-color: #666;
+        }
+        .new-person-form .btn.cancel:hover, .add-user-form .btn.cancel:hover {
+            background-color: #777;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        #addPersonBtn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #E74C3C;
+            color: #fff;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 2.5em;
+            line-height: 1;
+            text-align: center;
+            padding: 0;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.2s, transform 0.2s;
+            display: none; /* Hidden by default, shown when logged in to MDT */
+        }
+        #addPersonBtn:hover {
+            background-color: #C0392B;
+            transform: scale(1.05);
+        }
+
+        .points-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #2b2b2b;
+            color: #E74C3C;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.3em;
+            border: 1px solid #3a3a3a;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            display: none; /* Hidden by default */
+        }
+
+        /* Login Form Styles */
+        .login-form {
+            text-align: center;
+            padding: 30px;
+            background-color: #2b2b2b;
+            border-radius: 10px;
+            max-width: 400px;
+            margin: 50px auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+            border: 1px solid #3a3a3a;
+        }
+        .login-form h2 {
+            color: #E74C3C;
+            margin-bottom: 25px;
+            font-size: 2.2em;
+        }
+        .login-form input[type="text"],
+        .login-form input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #555;
+            border-radius: 6px;
+            background-color: #3e3e3e;
+            color: #eee;
+            font-size: 1em;
+            outline: none;
+        }
+        .login-form input[type="text"]::placeholder,
+        .login-form input[type="password"]::placeholder {
+            color: #aaa;
+        }
+        .login-form .btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+        #loginMessage {
+            color: #E74C3C;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        /* Admin Panel Styles */
+        .admin-controls {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .user-list {
+            margin-top: 20px;
+            background-color: #2b2b2b;
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid #3a3a3a;
+        }
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #333;
+            border: 1px solid #444;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .user-item:last-child {
+            margin-bottom: 0;
+        }
+        .user-item span {
+            color: #f0f0f0;
+            font-size: 1.1em;
+        }
+        .user-item strong {
+            color: #E74C3C;
+        }
+        .user-item .btn {
+            padding: 8px 15px;
+            font-size: 0.9em;
+            background-color: #C0392B;
+        }
+        .user-item .btn:hover {
+            background-color: #E74C3C;
+        }
+        .user-item .btn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>POLICE RP - MDT SYSTEM</h1>
+        <p>Maintain order and track criminal activity in the city.</p>
+        <nav>
+            <button class="nav-btn" data-target="logs">Logs</button>
+            <button class="nav-btn" data-target="description">Description</button>
+            <button class="nav-btn" data-target="mdt-system">MDT System</button>
+            <button class="nav-btn" data-target="admin-panel" id="adminPanelNavBtn" style="display: none;">Admin Panel</button> <button class="nav-btn" data-target="login" id="loginNavBtn">Login</button>
+            <button class="nav-btn" data-target="logout" id="logoutNavBtn" style="display: none;">Logout</button>
+        </nav>
+        <div class="points-display" id="playerPoints">Points: 0</div>
+    </header>
+
+    <main>
+        <button id="addPersonBtn" style="display: none;">+</button> <section id="logs" class="page-section active">
+            <div class="section-content">
+                <h2>System Logs</h2>
+                <p>This section would display system activities, arrests, and major events.</p>
+                <div id="logsContent">
+                    <p class="no-records">No recent logs.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="description" class="page-section">
+            <div class="section-content">
+                <h2>System Description</h2>
+                <p>The MDT (Mobile Data Terminal) system is designed for law enforcement personnel to efficiently manage citizen data, track criminal records, and document legal proceedings within the Role Play environment.</p>
+                <p>Features include:</p>
+                <ul>
+                    <li>Search for individuals by name or ID.</li>
+                    <li>Create new profiles for citizens.</li>
+                    <li>Add charges, fines, and assets to individual profiles.</li>
+                    <li>Maintain a clear record of all interactions.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="login" class="page-section">
+            <div class="login-form">
+                <h2>Officer Login</h2>
+                <input type="text" id="usernameInput" placeholder="Username">
+                <input type="password" id="passwordInput" placeholder="Password">
+                <button id="loginBtn" class="btn">Login</button>
+                <p id="loginMessage"></p>
+            </div>
+        </section>
+
+        <section id="mdt-system" class="page-section">
+            <div class="section-content">
+                <h2>MDT Search & Profiles</h2>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search by Name or ID...">
+                </div>
+
+                <div id="profileDetails">
+                    <p class="no-records" id="noProfileFound">Search for a person or add a new one.</p>
+                    </div>
+            </div>
+        </section>
+
+        <section id="admin-panel" class="page-section">
+            <div class="section-content">
+                <h2>Admin Panel - Manage Users</h2>
+                <div class="admin-controls">
+                    <button id="addUserBtn" class="btn">Add New User</button>
+                </div>
+                <div class="user-list" id="userList">
+                    <p class="no-records">Loading users...</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="overlay" id="newPersonOverlay">
+            <div class="new-person-form">
+                <h3>Add New Person to System</h3>
+                <label for="personName">Full Name:</label>
+                <input type="text" id="personName" placeholder="Enter full name" required>
+
+                <label for="personID">New ID Number:</label>
+                <input type="text" id="personID" placeholder="Enter unique ID (e.g., 1234)" required>
+
+                <label for="personImage">Image URL (Optional):</label>
+                <input type="url" id="personImage" placeholder="e.g., https://example.com/image.jpg">
+
+                <label for="personAge">Age:</label>
+                <input type="number" id="personAge" placeholder="Enter age" min="0">
+
+                <label for="personPhone">Phone Number (Optional):</label>
+                <input type="text" id="personPhone" placeholder="Enter phone number">
+
+                <div class="form-actions">
+                    <button id="createPersonBtn" class="btn">Create Person</button>
+                    <button id="cancelPersonBtn" class="btn cancel">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="overlay" id="addUserOverlay">
+            <div class="add-user-form">
+                <h3>Create New Officer Account</h3>
+                <label for="newUsernameInput">Username:</label>
+                <input type="text" id="newUsernameInput" placeholder="Enter new username" required>
+
+                <label for="newUserPasswordInput">Password:</label>
+                <input type="password" id="newUserPasswordInput" placeholder="Enter new password" required>
+
+                <div class="form-actions">
+                    <button id="createUserBtn" class="btn">Create Account</button>
+                    <button id="cancelCreateUserBtn" class="btn cancel">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Police RP. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
