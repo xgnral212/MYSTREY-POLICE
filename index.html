@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MYSTREY LIFE - Police System</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
+    <link rel="stylesheet" href="style.css"> <style>
         /* Add specific styles for the MDT layout here for quick access */
         .search-container {
             text-align: center;
@@ -340,14 +339,16 @@
             <button class="nav-btn" data-target="logs">Logs</button>
             <button class="nav-btn" data-target="description">Description</button>
             <button class="nav-btn" data-target="mdt-system">MDT System</button>
-            <button class="nav-btn" data-target="admin-panel" id="adminPanelNavBtn" style="display: none;">Admin Panel</button> <button class="nav-btn" data-target="login" id="loginNavBtn">Login</button>
+            <button class="nav-btn" data-target="admin-panel" id="adminPanelNavBtn" style="display: none;">Admin Panel</button>
+            <button class="nav-btn" data-target="login" id="loginNavBtn">Login</button>
             <button class="nav-btn" data-target="logout" id="logoutNavBtn" style="display: none;">Logout</button>
         </nav>
         <div class="points-display" id="playerPoints">Points: 0</div>
     </header>
 
     <main>
-        <button id="addPersonBtn" style="display: none;">+</button> <section id="logs" class="page-section active">
+        <button id="addPersonBtn" style="display: none;">+</button>
+        <section id="logs" class="page-section active">
             <div class="section-content">
                 <h2>System Logs</h2>
                 <p>This section would display system activities, arrests, and major events.</p>
@@ -390,7 +391,7 @@
 
                 <div id="profileDetails">
                     <p class="no-records" id="noProfileFound">Search for a person or add a new one.</p>
-                    </div>
+                </div>
             </div>
         </section>
 
@@ -452,6 +453,570 @@
         <p>&copy; 2025 Police RP. All rights reserved.</p>
     </footer>
 
-    <script src="script.js"></script>
+    <script type="module">
+        // Import Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-analytics.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAvvgL7711HOC1IHVqyNiNC7N3HIqP2JMo",
+            authDomain: "policerp-a71c8.firebaseapp.com",
+            projectId: "policerp-a71c8",
+            storageBucket: "policerp-a71c8.firebasestorage.app",
+            messagingSenderId: "569720054342",
+            appId: "1:569720054342:web:2d913aba81643bdc9ca047",
+            measurementId: "G-4NZTMPCRR8"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app); // Get Firestore instance
+
+        // ----------------------------------------------------
+        // Global variables and UI elements
+        // ----------------------------------------------------
+        let isLoggedIn = false;
+        let currentOfficerUsername = '';
+        let currentOfficerRole = 'officer'; // 'officer' or 'admin'
+        let currentPersonFirestoreId = null; // To track the currently displayed person's Firestore ID
+
+        const pages = document.querySelectorAll('.page-section');
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const loginForm = document.querySelector('.login-form');
+        const mdtSystemSection = document.getElementById('mdt-system');
+        const addPersonBtn = document.getElementById('addPersonBtn');
+        const newPersonOverlay = document.getElementById('newPersonOverlay');
+        const addPersonForm = document.querySelector('.new-person-form');
+        const createPersonBtn = document.getElementById('createPersonBtn');
+        const cancelPersonBtn = document.getElementById('cancelPersonBtn');
+        const searchInput = document.getElementById('searchInput');
+        const profileDetails = document.getElementById('profileDetails');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutNavBtn = document.getElementById('logoutNavBtn');
+        const loginNavBtn = document.getElementById('loginNavBtn');
+        const adminPanelNavBtn = document.getElementById('adminPanelNavBtn');
+        const addUserBtn = document.getElementById('addUserBtn');
+        const addUserOverlay = document.getElementById('addUserOverlay');
+        const createUserBtn = document.getElementById('createUserBtn');
+        const cancelCreateUserBtn = document.getElementById('cancelCreateUserBtn');
+        const userList = document.getElementById('userList');
+        const playerPointsDisplay = document.getElementById('playerPoints');
+
+        // ----------------------------------------------------
+        // Navigation and page display functions
+        // ----------------------------------------------------
+        function showPage(id) {
+            pages.forEach(page => {
+                page.style.display = 'none';
+            });
+            document.getElementById(id).style.display = 'block';
+
+            // Show/hide add person button and player points based on page and login status
+            if (id === 'mdt-system' && isLoggedIn) {
+                addPersonBtn.style.display = 'block';
+                playerPointsDisplay.style.display = 'block';
+            } else {
+                addPersonBtn.style.display = 'none';
+                playerPointsDisplay.style.display = 'none';
+            }
+        }
+
+        navButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const targetId = e.target.dataset.target;
+                if (targetId === 'logout') {
+                    handleLogout();
+                } else {
+                    showPage(targetId);
+                }
+            });
+        });
+
+        // Show login page on initial load
+        showPage('login');
+
+        // ----------------------------------------------------
+        // Login and Authentication functions (using Firebase Firestore for users)
+        // ----------------------------------------------------
+
+        // Function to fetch users from Firestore
+        async function getUsersFromFirestore() {
+            const usersCol = collection(db, "users");
+            const userSnapshot = await getDocs(usersCol);
+            const usersList = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            return usersList;
+        }
+
+        // Login function
+        loginBtn.addEventListener('click', async () => {
+            const usernameInput = document.getElementById('usernameInput').value;
+            const passwordInput = document.getElementById('passwordInput').value;
+            const loginMessage = document.getElementById('loginMessage');
+
+            if (!usernameInput || !passwordInput) {
+                loginMessage.textContent = 'Please enter both username and password.';
+                return;
+            }
+
+            const users = await getUsersFromFirestore();
+            const user = users.find(u => u.username === usernameInput && u.password === passwordInput); // WARNING: Password stored in plain text! Should be hashed in a real app.
+
+            if (user) {
+                isLoggedIn = true;
+                currentOfficerUsername = user.username;
+                currentOfficerRole = user.role || 'officer'; // Default to 'officer'
+                loginMessage.textContent = `Welcome, ${currentOfficerUsername}!`;
+
+                // Update button and menu visibility
+                loginNavBtn.style.display = 'none';
+                logoutNavBtn.style.display = 'inline-block';
+                if (currentOfficerRole === 'admin') {
+                    adminPanelNavBtn.style.display = 'inline-block';
+                } else {
+                    adminPanelNavBtn.style.display = 'none';
+                }
+
+                // Show MDT page after login
+                showPage('mdt-system');
+            } else {
+                loginMessage.textContent = 'Invalid username or password.';
+            }
+        });
+
+        // Logout function
+        function handleLogout() {
+            isLoggedIn = false;
+            currentOfficerUsername = '';
+            currentOfficerRole = 'officer';
+            loginNavBtn.style.display = 'inline-block';
+            logoutNavBtn.style.display = 'none';
+            adminPanelNavBtn.style.display = 'none';
+            addPersonBtn.style.display = 'none';
+            playerPointsDisplay.style.display = 'none'; // Hide player points on logout
+            showPage('login');
+            document.getElementById('loginMessage').textContent = ''; // Clear login message
+            document.getElementById('usernameInput').value = '';
+            document.getElementById('passwordInput').value = '';
+        }
+
+        // ----------------------------------------------------
+        // Admin Panel functions
+        // ----------------------------------------------------
+
+        adminPanelNavBtn.addEventListener('click', async () => {
+            if (currentOfficerRole === 'admin') {
+                await renderUserList();
+                showPage('admin-panel');
+            } else {
+                alert('You do not have permission to access the admin panel.');
+                showPage('mdt-system'); // Redirect to MDT page
+            }
+        });
+
+        addUserBtn.addEventListener('click', () => {
+            if (currentOfficerRole === 'admin') {
+                addUserOverlay.style.display = 'flex';
+            } else {
+                alert('You do not have permission to add users.');
+            }
+        });
+
+        cancelCreateUserBtn.addEventListener('click', () => {
+            addUserOverlay.style.display = 'none';
+            document.getElementById('newUsernameInput').value = '';
+            document.getElementById('newUserPasswordInput').value = '';
+        });
+
+        createUserBtn.addEventListener('click', async () => {
+            const newUsername = document.getElementById('newUsernameInput').value;
+            const newPassword = document.getElementById('newUserPasswordInput').value;
+
+            if (!newUsername || !newPassword) {
+                alert('Please enter a username and password for the new user.');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "users"), {
+                    username: newUsername,
+                    password: newPassword, // WARNING: This stores password in plain text! Hash it in a real app.
+                    role: 'officer' // Default role for new user
+                });
+                alert('User added successfully!');
+                addUserOverlay.style.display = 'none';
+                document.getElementById('newUsernameInput').value = '';
+                document.getElementById('newUserPasswordInput').value = '';
+                await renderUserList(); // Update user list
+            } catch (e) {
+                console.error("Error adding user: ", e);
+                alert('Failed to add user.');
+            }
+        });
+
+        async function renderUserList() {
+            userList.innerHTML = '<p class="no-records">Loading users...</p>';
+            const users = await getUsersFromFirestore();
+            if (users.length > 0) {
+                userList.innerHTML = '';
+                users.forEach(user => {
+                    if (user.username !== currentOfficerUsername) { // Don't allow deleting the current user
+                        const userItem = document.createElement('div');
+                        userItem.className = 'user-item';
+                        userItem.innerHTML = `
+                            <span>Username: <strong>${user.username}</strong> (Role: ${user.role || 'officer'})</span>
+                            <button class="btn delete-user-btn" data-user-id="${user.id}">Delete</button>
+                        `;
+                        userList.appendChild(userItem);
+                    }
+                });
+                // Add event listeners for delete buttons
+                userList.querySelectorAll('.delete-user-btn').forEach(button => {
+                    button.addEventListener('click', async (e) => {
+                        const userIdToDelete = e.target.dataset.userId;
+                        if (confirm('Are you sure you want to delete this user?')) {
+                            try {
+                                await deleteDoc(doc(db, "users", userIdToDelete));
+                                alert('User deleted successfully!');
+                                await renderUserList(); // Refresh list
+                            } catch (e) {
+                                console.error("Error deleting user: ", e);
+                                alert('Failed to delete user.');
+                            }
+                        }
+                    });
+                });
+            } else {
+                userList.innerHTML = '<p class="no-records">No users found.</p>';
+            }
+        }
+
+        // ----------------------------------------------------
+        // MDT functions (Add, Search, Display, Delete Records)
+        // ----------------------------------------------------
+
+        // Function to add a new person to Firestore
+        async function addNewPersonToFirestore(personData) {
+            try {
+                const docRef = await addDoc(collection(db, "persons"), personData);
+                console.log("Person added with ID: ", docRef.id);
+                return { id: docRef.id, ...personData }; // Return added person with Firebase ID
+            } catch (e) {
+                console.error("Error adding person: ", e);
+                return null;
+            }
+        }
+
+        // Function to search for a person by name or ID
+        async function searchPersonInFirestore(searchTerm) {
+            const personsCol = collection(db, "persons");
+            let personData = null;
+            let personId = null;
+
+            // Try searching by personID first if it's numeric
+            if (!isNaN(searchTerm) && searchTerm.trim() !== '') {
+                const qById = query(personsCol, where("personID", "==", searchTerm));
+                const querySnapshotById = await getDocs(qById);
+                if (!querySnapshotById.empty) {
+                    personId = querySnapshotById.docs[0].id;
+                    personData = querySnapshotById.docs[0].data();
+                    return { id: personId, ...personData };
+                }
+            }
+
+            // If not found by ID, try searching by name
+            const qByName = query(personsCol, where("name", "==", searchTerm));
+            const querySnapshotByName = await getDocs(qByName);
+            if (!querySnapshotByName.empty) {
+                personId = querySnapshotByName.docs[0].id;
+                personData = querySnapshotByName.docs[0].data();
+                return { id: personId, ...personData };
+            }
+
+            return null; // Person not found
+        }
+
+        // Function to add a record (Charge/Asset) for a specific person
+        async function addRecordToPerson(personFirestoreId, recordType, recordData) {
+            // recordType can be "charges" or "assets"
+            try {
+                const docRef = await addDoc(collection(db, "persons", personFirestoreId, recordType), recordData);
+                console.log(`Added ${recordType} with ID: `, docRef.id);
+                return { id: docRef.id, ...recordData };
+            } catch (e) {
+                console.error(`Error adding ${recordType}: `, e);
+                return null;
+            }
+        }
+
+        // Function to fetch all records (Charges/Assets) for a specific person
+        async function getRecordsForPerson(personFirestoreId, recordType) {
+            const recordsCol = collection(db, "persons", personFirestoreId, recordType);
+            const recordsSnapshot = await getDocs(recordsCol);
+            const recordsList = recordsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            return recordsList;
+        }
+
+        // Function to delete a specific record for a specific person
+        async function deleteRecordForPerson(personFirestoreId, recordType, recordFirestoreId) {
+            try {
+                await deleteDoc(doc(db, "persons", personFirestoreId, recordType, recordFirestoreId));
+                console.log("Record deleted successfully!");
+                return true;
+            } catch (e) {
+                console.error("Error deleting record: ", e);
+                return false;
+            }
+        }
+
+        // Function to update a person's points
+        async function updatePersonPoints(personFirestoreId, points) {
+            try {
+                const personRef = doc(db, "persons", personFirestoreId);
+                await updateDoc(personRef, {
+                    points: points
+                });
+                console.log("Points updated successfully!");
+                return true;
+            } catch (e) {
+                console.error("Error updating points: ", e);
+                return false;
+            }
+        }
+
+
+        // ----------------------------------------------------
+        // MDT Event Listeners
+        // ----------------------------------------------------
+
+        addPersonBtn.addEventListener('click', () => {
+            if (isLoggedIn) {
+                newPersonOverlay.style.display = 'flex';
+            } else {
+                alert('You must be logged in to add a person.');
+            }
+        });
+
+        cancelPersonBtn.addEventListener('click', () => {
+            newPersonOverlay.style.display = 'none';
+            addPersonForm.reset(); // Clear form fields
+        });
+
+        createPersonBtn.addEventListener('click', async () => {
+            const name = document.getElementById('personName').value.trim();
+            const personID = document.getElementById('personID').value.trim();
+            const imageUrl = document.getElementById('personImage').value.trim();
+            const age = document.getElementById('personAge').value.trim();
+            const phone = document.getElementById('personPhone').value.trim();
+
+            if (!name || !personID) {
+                alert('Name and ID are required.');
+                return;
+            }
+
+            // Check if ID already exists
+            const existingPerson = await searchPersonInFirestore(personID);
+            if (existingPerson) {
+                alert('A person with this ID already exists. Please use a unique ID.');
+                return;
+            }
+
+            const newPersonData = {
+                name: name,
+                personID: personID,
+                imageUrl: imageUrl || 'https://via.placeholder.com/120x120?text=No+Image', // Default image
+                age: parseInt(age) || 0,
+                phone: phone || 'N/A',
+                points: 0, // Initial points
+                createdAt: new Date().toISOString() // For tracking
+            };
+
+            const addedPerson = await addNewPersonToFirestore(newPersonData);
+            if (addedPerson) {
+                alert('Person added successfully!');
+                newPersonOverlay.style.display = 'none';
+                addPersonForm.reset();
+                // Optionally, display the added person or trigger a new search
+                searchInput.value = addedPerson.personID;
+                searchInput.dispatchEvent(new Event('input')); // Trigger search automatically
+            } else {
+                alert('Failed to add person. Please try again.');
+            }
+        });
+
+        searchInput.addEventListener('input', async (e) => {
+            if (!isLoggedIn) {
+                profileDetails.innerHTML = '<p class="no-records">Please log in to use the MDT system.</p>';
+                return;
+            }
+
+            const searchTerm = e.target.value.trim();
+            profileDetails.innerHTML = ''; // Clear old content
+
+            if (searchTerm.length >= 1) { // Start search after at least 1 character
+                const foundPerson = await searchPersonInFirestore(searchTerm);
+                if (foundPerson) {
+                    currentPersonFirestoreId = foundPerson.id; // Store Firebase ID
+                    await renderPersonProfile(foundPerson);
+                } else {
+                    profileDetails.innerHTML = '<p class="no-records" id="noProfileFound">No person found with that ID or name. Try a different search or add a new one.</p>';
+                }
+            } else {
+                profileDetails.innerHTML = '<p class="no-records" id="noProfileFound">Search for a person or add a new one.</p>';
+            }
+        });
+
+        // Function to render person profile
+        async function renderPersonProfile(person) {
+            const charges = await getRecordsForPerson(person.id, 'charges');
+            const assets = await getRecordsForPerson(person.id, 'assets');
+
+            let profileHtml = `
+                <div class="profile-card" data-person-firestore-id="${person.id}">
+                    <img src="${person.imageUrl}" alt="Profile Image">
+                    <h3>${person.name}</h3>
+                    <div class="profile-info">
+                        <p>ID: <span>${person.personID}</span></p>
+                        <p>Age: <span>${person.age}</span></p>
+                        <p>Phone: <span>${person.phone}</span></p>
+                        <p>Points: <span id="currentPersonPoints">${person.points || 0}</span></p>
+                        <button class="btn" id="addPointsBtn">+5 Points</button>
+                        <button class="btn" id="removePointsBtn">-5 Points</button>
+                    </div>
+
+                    <h4 class="profile-section-title">Charges/Violations</h4>
+                    <div id="chargesList"></div>
+                    <div class="add-item-form">
+                        <input type="text" id="newChargeTitle" placeholder="Charge Title" required>
+                        <textarea id="newChargeDetails" placeholder="Charge Details" required></textarea>
+                        <button class="btn add-record-btn" data-record-type="charges">Add Charge</button>
+                    </div>
+
+                    <h4 class="profile-section-title">Assets</h4>
+                    <div id="assetsList"></div>
+                    <div class="add-item-form">
+                        <input type="text" id="newAssetItem" placeholder="Asset Item" required>
+                        <textarea id="newAssetDetails" placeholder="Asset Details" required></textarea>
+                        <button class="btn add-record-btn" data-record-type="assets">Add Asset</button>
+                    </div>
+                </div>
+            `;
+            profileDetails.innerHTML = profileHtml;
+
+            const chargesListDiv = document.getElementById('chargesList');
+            chargesListDiv.innerHTML = charges.map(charge => `
+                <div class="record-item" data-record-id="${charge.id}" data-record-type="charges">
+                    <div><strong>${charge.title}</strong><p>${charge.details} <small>(${new Date(charge.timestamp).toLocaleDateString()})</small></p></div>
+                    <button class="btn delete-record-btn">Delete</button>
+                </div>
+            `).join('') || '<p class="no-records">No charges found.</p>';
+
+            const assetsListDiv = document.getElementById('assetsList');
+            assetsListDiv.innerHTML = assets.map(asset => `
+                <div class="record-item" data-record-id="${asset.id}" data-record-type="assets">
+                    <div><strong>${asset.item}</strong><p>${asset.details} <small>(${new Date(asset.timestamp).toLocaleDateString()})</small></p></div>
+                    <button class="btn delete-record-btn">Delete</button>
+                </div>
+            `).join('') || '<p class="no-records">No assets found.</p>';
+
+            // Event listeners for add record buttons
+            profileDetails.querySelectorAll('.add-record-btn').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    if (!currentPersonFirestoreId) return;
+
+                    const recordType = e.target.dataset.recordType;
+                    let recordData = {};
+
+                    if (recordType === 'charges') {
+                        const title = document.getElementById('newChargeTitle').value.trim();
+                        const details = document.getElementById('newChargeDetails').value.trim();
+                        if (!title || !details) {
+                            alert('Please fill in both title and details for the charge.');
+                            return;
+                        }
+                        recordData = {
+                            title: title,
+                            details: details,
+                            timestamp: new Date().toISOString()
+                        };
+                    } else if (recordType === 'assets') {
+                        const item = document.getElementById('newAssetItem').value.trim();
+                        const details = document.getElementById('newAssetDetails').value.trim();
+                        if (!item || !details) {
+                            alert('Please fill in both item and details for the asset.');
+                            return;
+                        }
+                        recordData = {
+                            item: item,
+                            details: details,
+                            timestamp: new Date().toISOString()
+                        };
+                    }
+
+                    const addedRecord = await addRecordToPerson(currentPersonFirestoreId, recordType, recordData);
+                    if (addedRecord) {
+                        // Update record display after adding
+                        await renderPersonProfile(person); // Re-render the entire profile to refresh records
+                        // Clear input fields
+                        if (recordType === 'charges') {
+                            document.getElementById('newChargeTitle').value = '';
+                            document.getElementById('newChargeDetails').value = '';
+                        } else if (recordType === 'assets') {
+                            document.getElementById('newAssetItem').value = '';
+                            document.getElementById('newAssetDetails').value = '';
+                        }
+                    } else {
+                        alert('Failed to add record. Please try again.');
+                    }
+                });
+            });
+
+            // Event listeners for delete record buttons
+            profileDetails.querySelectorAll('.delete-record-btn').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    if (!currentPersonFirestoreId) return;
+
+                    const recordItem = e.target.closest('.record-item');
+                    const recordId = recordItem.dataset.recordId;
+                    const recordType = recordItem.dataset.recordType; // charges or assets
+
+                    if (confirm(`Are you sure you want to delete this ${recordType.slice(0, -1)} record?`)) {
+                        const success = await deleteRecordForPerson(currentPersonFirestoreId, recordType, recordId);
+                        if (success) {
+                            recordItem.remove(); // Remove element from UI
+                            // Optionally, re-fetch and update points if deleting record affects them
+                        } else {
+                            alert('Failed to delete record. Please try again.');
+                        }
+                    }
+                });
+            });
+
+            // Event listeners for points buttons
+            document.getElementById('addPointsBtn').addEventListener('click', async () => {
+                if (!currentPersonFirestoreId) return;
+                let currentPoints = parseInt(document.getElementById('currentPersonPoints').textContent);
+                currentPoints += 5;
+                const success = await updatePersonPoints(currentPersonFirestoreId, currentPoints);
+                if (success) {
+                    document.getElementById('currentPersonPoints').textContent = currentPoints;
+                    playerPointsDisplay.textContent = `Points: ${currentPoints}`; // Update points in top display
+                }
+            });
+
+            document.getElementById('removePointsBtn').addEventListener('click', async () => {
+                if (!currentPersonFirestoreId) return;
+                let currentPoints = parseInt(document.getElementById('currentPersonPoints').textContent);
+                currentPoints = Math.max(0, currentPoints - 5); // Points cannot go below 0
+                const success = await updatePersonPoints(currentPersonFirestoreId, currentPoints);
+                if (success) {
+                    document.getElementById('currentPersonPoints').textContent = currentPoints;
+                    playerPointsDisplay.textContent = `Points: ${currentPoints}`; // Update points in top display
+                }
+            });
+        }
+    </script>
 </body>
 </html>
