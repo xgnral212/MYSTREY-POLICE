@@ -4,8 +4,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MYSTREY LIFE - Police System</title>
-    <link rel="stylesheet" href="style.css"> <style>
-        /* Add specific styles for the MDT layout here for quick access */
+    <link rel="stylesheet" href="style.css"> 
+    <style>
+        /* إضافة الأنماط (CSS) هنا */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            background-color: #222;
+            padding: 20px 40px;
+            border-bottom: 3px solid #E74C3C;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            position: relative; /* لإحتواء زر الإضافة والنقاط */
+        }
+        header h1 {
+            color: #E74C3C;
+            margin: 0;
+            font-size: 2.8em;
+            letter-spacing: 1px;
+        }
+        header p {
+            color: #aaa;
+            margin-top: 5px;
+            font-size: 1.1em;
+        }
+        nav {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .nav-btn, .btn {
+            background-color: #333;
+            color: #eee;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.05em;
+            transition: background-color 0.2s, color 0.2s, transform 0.2s;
+            text-decoration: none; /* للعناصر التي قد تكون روابط */
+            display: inline-block; /* لضمان الأبعاد والتباعد الصحيح */
+        }
+        .nav-btn:hover, .btn:hover {
+            background-color: #E74C3C;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        main {
+            flex-grow: 1;
+            padding: 20px;
+            position: relative; /* لإحتواء الأوفرلي والأزرار المطلقة */
+        }
+        .page-section {
+            background-color: #222;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            display: none; /* يتم إظهارها بواسطة JavaScript */
+            margin: 0 auto;
+            max-width: 900px;
+        }
+        .page-section.active {
+            display: block;
+        }
+        .section-content h2 {
+            color: #E74C3C;
+            font-size: 2.2em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .section-content p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .section-content ul {
+            list-style-type: disc;
+            margin-left: 25px;
+            margin-bottom: 20px;
+        }
+        .section-content li {
+            margin-bottom: 8px;
+        }
+        footer {
+            background-color: #222;
+            color: #aaa;
+            text-align: center;
+            padding: 15px 0;
+            border-top: 1px solid #333;
+            font-size: 0.9em;
+            margin-top: 30px;
+        }
+
+        /* أنماط MDT المحددة */
         .search-container {
             text-align: center;
             margin-bottom: 20px;
@@ -489,7 +589,8 @@
         const mdtSystemSection = document.getElementById('mdt-system');
         const addPersonBtn = document.getElementById('addPersonBtn');
         const newPersonOverlay = document.getElementById('newPersonOverlay');
-        const addPersonForm = document.querySelector('.new-person-form');
+        // تم تغيير addPersonForm ليكون العنصر div بدلاً من افتراض أنه <form>
+        const addPersonFormDiv = document.querySelector('.new-person-form'); 
         const createPersonBtn = document.getElementById('createPersonBtn');
         const cancelPersonBtn = document.getElementById('cancelPersonBtn');
         const searchInput = document.getElementById('searchInput');
@@ -516,7 +617,7 @@
 
             // Show/hide add person button and player points based on page and login status
             if (id === 'mdt-system' && isLoggedIn) {
-                addPersonBtn.style.display = 'block';
+                addPersonBtn.style.display = 'block'; // This is where it should become visible
                 playerPointsDisplay.style.display = 'block';
             } else {
                 addPersonBtn.style.display = 'none';
@@ -799,9 +900,14 @@
             }
         });
 
+        // تصحيح: مسح الحقول يدوياً بدلاً من .reset()
         cancelPersonBtn.addEventListener('click', () => {
             newPersonOverlay.style.display = 'none';
-            addPersonForm.reset(); // Clear form fields
+            document.getElementById('personName').value = '';
+            document.getElementById('personID').value = '';
+            document.getElementById('personImage').value = '';
+            document.getElementById('personAge').value = '';
+            document.getElementById('personPhone').value = '';
         });
 
         createPersonBtn.addEventListener('click', async () => {
@@ -837,7 +943,12 @@
             if (addedPerson) {
                 alert('Person added successfully!');
                 newPersonOverlay.style.display = 'none';
-                addPersonForm.reset();
+                // تصحيح: مسح الحقول يدوياً بدلاً من .reset()
+                document.getElementById('personName').value = '';
+                document.getElementById('personID').value = '';
+                document.getElementById('personImage').value = '';
+                document.getElementById('personAge').value = '';
+                document.getElementById('personPhone').value = '';
                 // Optionally, display the added person or trigger a new search
                 searchInput.value = addedPerson.personID;
                 searchInput.dispatchEvent(new Event('input')); // Trigger search automatically
