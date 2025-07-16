@@ -1,383 +1,683 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // --- Global State Variables ---
-    let isLoggedIn = false;
-    let loggedInUsername = ''; // To store the username of the logged-in user
-    let playerPoints = parseInt(localStorage.getItem('policeRPPoints') || '0');
-    let peopleData = JSON.parse(localStorage.getItem('policeRPPeopleData')) || {};
+/* Custom font: Cairo from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
 
-    // Initialize users data: 'itex' is the admin, others are regular officers
-    // Structure: { username: { password: "hashed_or_plain_for_demo", role: "admin" | "officer" }}
-    let users = JSON.parse(localStorage.getItem('policeRPUsers')) || {
-        'itex': { password: '7777', role: 'admin' } // 'إيتكس الذيب' account
-    };
-    // Save initial admin user if it's a new setup
-    if (!localStorage.getItem('policeRPUsers')) {
-        localStorage.setItem('policeRPUsers', JSON.stringify(users));
+:root {
+    --primary-bg: #2c2c2c; /* Dark grey background */
+    --secondary-bg: #3a3a3a; /* Slightly lighter dark grey */
+    --header-bg: #4a4a4a;   /* Darker grey for header */
+    --accent-color: #FFD700; /* Gold/Light Yellow accent */
+    --success-color: #8BC34A; /* Green for success/add */
+    --warning-color: #FFC107; /* Amber for warnings */
+    --danger-color: #F44336; /* Red for danger/delete */
+    --text-light: #f0f0f0; /* Light text color */
+    --text-dark: #333;   /* Dark text color (for white backgrounds) */
+    --border-color: #555555; /* Border color */
+    --input-bg: #444444; /* Input field background */
+}
+
+body {
+    font-family: 'Cairo', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--primary-bg);
+    color: var(--text-light);
+    direction: rtl; /* Right-to-left direction for Arabic */
+    text-align: right; /* Align text to the right for RTL */
+    line-height: 1.6;
+    overflow-y: scroll; /* Always show scrollbar to prevent layout shifts */
+}
+
+.container {
+    max-width: 1400px;
+    margin: 20px auto;
+    background-color: var(--secondary-bg);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 40px);
+}
+
+/* Header Styles */
+header {
+    background-color: var(--header-bg);
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 15px; /* Space between items */
+}
+
+.logo {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent-color);
+    flex-shrink: 0; /* Prevent shrinking */
+}
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px; /* Space between nav buttons */
+    justify-content: flex-end; /* Align to right for RTL */
+    flex-grow: 1; /* Allow nav to take available space */
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    font-family: 'Cairo', sans-serif;
+    font-size: 17px;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+    border-radius: 8px;
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+.nav-btn:hover,
+.nav-btn.active-nav {
+    background-color: var(--accent-color);
+    color: var(--text-dark); /* Dark text on yellow background */
+    transform: translateY(-2px);
+}
+
+.user-info {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--success-color);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Page Sections */
+.page-section {
+    padding: 40px 30px;
+    flex-grow: 1;
+    display: none; /* Hidden by default */
+}
+
+.page-section.active {
+    display: block; /* Show active section */
+}
+
+h2 {
+    color: var(--accent-color);
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 32px;
+}
+
+h3 {
+    color: var(--success-color);
+    margin-top: 30px;
+    margin-bottom: 20px;
+    font-size: 24px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+h4 {
+    color: var(--warning-color);
+    margin-top: 25px;
+    margin-bottom: 15px;
+    font-size: 20px;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 25px;
+    text-align: right;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 18px;
+    color: var(--text-light);
+    font-weight: 700;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group input[type="url"],
+.form-group input[type="number"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--input-bg);
+    color: var(--text-light);
+    font-family: 'Cairo', sans-serif;
+    font-size: 16px;
+    box-sizing: border-box; /* Include padding in width */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: var(--accent-color);
+    outline: none;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.4); /* Yellow shadow */
+}
+
+.btn {
+    border: none;
+    padding: 12px 28px;
+    font-size: 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: inline-block;
+    margin-left: 15px; /* Spacing for RTL buttons */
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+}
+
+.btn:last-child {
+    margin-left: 0;
+}
+
+.btn.primary-btn {
+    background-color: var(--accent-color);
+    color: var(--text-dark); /* Dark text on yellow button */
+}
+
+.btn.primary-btn:hover {
+    background-color: #FFEA00; /* Lighter yellow on hover */
+    transform: translateY(-2px);
+}
+
+.btn.secondary-btn {
+    background-color: #6a6a6a; /* Darker grey for secondary */
+    color: #fff;
+}
+
+.btn.secondary-btn:hover {
+    background-color: #8a8a8a;
+    transform: translateY(-2px);
+}
+
+.btn.success-btn {
+    background-color: var(--success-color);
+    color: #fff;
+}
+
+.btn.success-btn:hover {
+    background-color: #A5D6A7;
+    transform: translateY(-2px);
+}
+
+.btn.danger-btn {
+    background-color: var(--danger-color);
+    color: #fff;
+}
+
+.btn.danger-btn:hover {
+    background-color: #E57373;
+    transform: translateY(-2px);
+}
+
+.btn.warning-btn {
+    background-color: var(--warning-color);
+    color: var(--text-dark); /* Dark text on amber button */
+}
+
+.btn.warning-btn:hover {
+    background-color: #FFEB3B;
+    transform: translateY(-2px);
+}
+
+.section-actions {
+    margin-top: 20px;
+    margin-bottom: 30px;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: flex-end; /* Align to right for RTL */
+}
+
+/* Messages */
+.message {
+    margin-top: 15px;
+    font-size: 16px;
+    text-align: center;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.message.error-message {
+    color: var(--danger-color);
+    background-color: rgba(244, 67, 54, 0.2);
+    border: 1px solid var(--danger-color);
+}
+
+.message.success-message {
+    color: var(--success-color);
+    background-color: rgba(139, 195, 74, 0.2);
+    border: 1px solid var(--success-color);
+}
+
+.message.info-message {
+    color: var(--warning-color);
+    background-color: rgba(255, 193, 7, 0.2);
+    border: 1px solid var(--warning-color);
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 40px 0;
+}
+
+.small-text {
+    font-size: 14px;
+    color: #aaa;
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* Login/Auth specific styles */
+.auth-form {
+    background-color: var(--primary-bg);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    width: 500px;
+    max-width: 90%;
+    margin: 30px auto; /* Center the form */
+    text-align: right;
+}
+.auth-form .btn {
+    width: auto; /* Buttons inside form will auto size based on content */
+    margin-top: 20px;
+}
+.auth-form h3 {
+    text-align: center;
+    color: var(--accent-color);
+    font-size: 28px;
+    margin-bottom: 30px;
+}
+
+/* MDT System Specific Styles */
+.mdt-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    justify-content: flex-end; /* Align to right for RTL */
+    flex-wrap: wrap;
+}
+
+.mdt-header input[type="text"] {
+    flex-grow: 1; /* Allow search input to take available space */
+}
+
+.citizen-details {
+    background-color: var(--primary-bg);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    margin-top: 20px;
+    border-right: 5px solid var(--accent-color); /* Accent border */
+    display: none; /* Hidden by default */
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.profile-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-left: 25px; /* Adjust for RTL */
+    border: 4px solid var(--success-color);
+    box-shadow: 0 0 15px rgba(139, 195, 74, 0.3);
+}
+
+.profile-info h3 {
+    margin: 0;
+    color: var(--accent-color);
+    font-size: 28px;
+    border: none;
+    padding: 0;
+}
+
+.profile-info p {
+    margin: 8px 0;
+    color: var(--text-light);
+    font-size: 17px;
+}
+
+.profile-actions {
+    margin-top: 30px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 25px;
+    text-align: right; /* Align buttons to the right for RTL */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: flex-end;
+}
+
+.records-section {
+    margin-top: 40px;
+}
+
+.records-list .record-item {
+    background-color: var(--input-bg);
+    padding: 18px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    border-right: 6px solid; /* For color coding */
+}
+
+.record-item.charge {
+    border-color: var(--danger-color);
+}
+
+.record-item.asset {
+    border-color: var(--success-color);
+}
+
+.record-info {
+    flex-grow: 1;
+}
+
+.record-info p {
+    margin: 5px 0;
+    font-size: 16px;
+    color: var(--text-light);
+}
+
+.record-info strong {
+    color: #fff;
+    font-weight: 700;
+}
+
+.record-actions {
+    display: flex;
+    gap: 10px;
+    margin-right: 20px; /* Adjust for RTL */
+    flex-shrink: 0;
+}
+
+/* Overlay Styles (Popups) */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    display: none; /* Hidden by default */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.overlay-content {
+    background-color: var(--secondary-bg);
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    width: 600px;
+    max-width: 95%;
+    text-align: right;
+    max-height: 90vh; /* Limit height for scrollability */
+    overflow-y: auto; /* Enable scrolling for long forms */
+    position: relative; /* For the close button if added */
+}
+
+.overlay-content h3 {
+    color: var(--accent-color);
+    margin-bottom: 35px;
+    text-align: center;
+    font-size: 30px;
+    border: none;
+    padding: 0;
+}
+
+.overlay-content .btn {
+    width: auto;
+    margin-top: 25px;
+    margin-left: 15px;
+}
+
+/* Officer & User Lists (General Styles for lists of people/users) */
+.officer-list, .case-list, .ranks-list {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.officer-item, .case-item, .rank-item {
+    background-color: var(--input-bg);
+    padding: 15px 20px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    border-right: 5px solid var(--success-color); /* Default border */
+}
+.officer-item.offline {
+    border-right-color: var(--danger-color); /* Red for offline */
+}
+
+.case-item {
+    border-right-color: var(--warning-color);
+}
+.case-item.completed {
+    border-right-color: var(--success-color);
+}
+.case-item.failed {
+    border-right-color: var(--danger-color);
+}
+
+.item-info {
+    flex-grow: 1;
+}
+
+.item-info p {
+    margin: 5px 0;
+    font-size: 16px;
+    color: var(--text-light);
+}
+
+.item-info strong {
+    color: #fff;
+}
+
+.item-actions {
+    display: flex;
+    gap: 10px;
+    margin-left: 20px; /* Adjust for RTL */
+    flex-shrink: 0;
+}
+
+/* Specific styles for Ranks & Points */
+.my-rank-points {
+    background-color: var(--primary-bg);
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    border-right: 5px solid var(--accent-color);
+    margin-top: 20px;
+    text-align: center;
+}
+
+.my-rank-points p {
+    font-size: 18px;
+    margin: 10px 0;
+}
+
+.my-rank-points h3 {
+    border: none;
+    padding: 0;
+    margin-bottom: 20px;
+    font-size: 26px;
+    color: var(--success-color);
+}
+
+.ranks-list p {
+    background-color: var(--input-bg);
+    padding: 12px 18px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 17px;
+    border-right: 4px solid var(--primary-bg); /* Subtle border */
+}
+
+/* Ops Center display */
+#opCenterDisplay {
+    background-color: var(--primary-bg);
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    border-right: 5px solid var(--warning-color);
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+#opCenterDisplay p {
+    font-size: 20px;
+    margin: 10px 0;
+}
+
+#opCenterDisplay strong {
+    color: #fff;
+}
+
+/* Announcement Bar */
+.announcement-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--warning-color);
+    color: var(--text-dark);
+    text-align: center;
+    padding: 10px 20px;
+    font-size: 20px;
+    font-weight: 700;
+    z-index: 1001; /* Above overlays if needed */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    display: none; /* Hidden by default */
+    animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    header {
+        flex-direction: column;
+        align-items: flex-end; /* Align header items to the right in RTL */
     }
-
-
-    // --- DOM Elements ---
-    const pageSections = document.querySelectorAll('.page-section');
-    const navButtons = document.querySelectorAll('.nav-btn');
-    const loginNavBtn = document.getElementById('loginNavBtn');
-    const logoutNavBtn = document.getElementById('logoutNavBtn');
-    const playerPointsDisplay = document.getElementById('playerPoints');
-    const addPersonBtn = document.getElementById('addPersonBtn'); // For adding people to MDT
-    const newPersonOverlay = document.getElementById('newPersonOverlay');
-    const createPersonBtn = document.getElementById('createPersonBtn');
-    const cancelPersonBtn = document.getElementById('cancelPersonBtn');
-    const searchInput = document.getElementById('searchInput');
-    const profileDetails = document.getElementById('profileDetails');
-    const noProfileFoundMessage = document.getElementById('noProfileFound');
-    const loginBtn = document.getElementById('loginBtn');
-    const usernameInput = document.getElementById('usernameInput');
-    const passwordInput = document.getElementById('passwordInput');
-    const loginMessage = document.getElementById('loginMessage');
-
-    // New elements for Admin Panel
-    const adminPanelNavBtn = document.getElementById('adminPanelNavBtn');
-    const adminPanelSection = document.getElementById('admin-panel');
-    const addUserOverlay = document.getElementById('addUserOverlay');
-    const createUserBtn = document.getElementById('createUserBtn');
-    const cancelCreateUserBtn = document.getElementById('cancelCreateUserBtn');
-    const newUsernameInput = document.getElementById('newUsernameInput');
-    const newUserPasswordInput = document.getElementById('newUserPasswordInput');
-    const userListDiv = document.getElementById('userList');
-    const addUserBtn = document.getElementById('addUserBtn'); // Button inside admin panel to open add user form
-
-    // --- Helper Functions ---
-    function updatePointsDisplay() {
-        playerPointsDisplay.textContent = `Points: ${playerPoints}`;
-        localStorage.setItem('policeRPPoints', playerPoints);
+    nav {
+        width: 100%;
+        justify-content: flex-end; /* Ensure buttons stay right-aligned */
+        margin-top: 15px;
     }
-
-    function savePeopleData() {
-        localStorage.setItem('policeRPPeopleData', JSON.stringify(peopleData));
+    .user-info {
+        margin-top: 15px;
+        width: 100%;
+        text-align: right;
     }
-
-    function saveUsersData() {
-        localStorage.setItem('policeRPUsers', JSON.stringify(users));
+    .mdt-header {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
     }
-
-    function showSection(targetId) {
-        pageSections.forEach(section => {
-            section.classList.remove('active');
-        });
-        document.getElementById(targetId).classList.add('active');
-
-        // Update active nav button
-        navButtons.forEach(btn => {
-            if (btn.dataset.target === targetId) {
-                btn.classList.add('active-nav');
-            } else {
-                btn.classList.remove('active-nav');
-            }
-        });
-
-        // Handle MDT specific UI
-        if (targetId === 'mdt-system' && isLoggedIn) {
-            addPersonBtn.style.display = 'block';
-            searchInput.value = ''; // Clear search on section change
-            profileDetails.innerHTML = ''; // Clear profile on section change
-            noProfileFoundMessage.style.display = 'block'; // Show "no profile found"
-        } else {
-            addPersonBtn.style.display = 'none';
-        }
-
-        // Handle Admin Panel specific UI
-        if (targetId === 'admin-panel' && isLoggedIn && users[loggedInUsername]?.role === 'admin') {
-            renderUserList();
-        }
+    .mdt-header input {
+        width: 100%;
     }
-
-    function updateLoginUI() {
-        if (isLoggedIn) {
-            loginNavBtn.style.display = 'none';
-            logoutNavBtn.style.display = 'inline-block';
-            playerPointsDisplay.style.display = 'block';
-            updatePointsDisplay();
-
-            // Show Admin Panel button only for admin
-            if (users[loggedInUsername]?.role === 'admin') {
-                adminPanelNavBtn.style.display = 'inline-block';
-            } else {
-                adminPanelNavBtn.style.display = 'none';
-            }
-
-            showSection('mdt-system'); // Go to MDT on successful login
-        } else {
-            loggedInUsername = ''; // Clear logged in user
-            loginNavBtn.style.display = 'inline-block';
-            logoutNavBtn.style.display = 'none';
-            playerPointsDisplay.style.display = 'none';
-            adminPanelNavBtn.style.display = 'none'; // Hide admin panel button on logout
-            showSection('login'); // Go to login on logout/initial load
-        }
+    .citizen-details {
+        padding: 20px;
     }
-
-    // Function to render the list of users in the Admin Panel
-    function renderUserList() {
-        userListDiv.innerHTML = '';
-        let hasUsers = false;
-        for (const userKey in users) {
-            hasUsers = true;
-            const user = users[userKey];
-            const userDiv = document.createElement('div');
-            userDiv.classList.add('user-item');
-            userDiv.innerHTML = `
-                <span>Username: <strong>${userKey}</strong> (Role: ${user.role})</span>
-                <button class="btn delete-user-btn" data-username="${userKey}">Delete</button>
-            `;
-            // Disable delete for the admin itself
-            if (userKey === 'itex') { // Assuming 'itex' is the primary admin
-                 userDiv.querySelector('.delete-user-btn').disabled = true;
-                 userDiv.querySelector('.delete-user-btn').textContent = 'Cannot Delete Admin';
-                 userDiv.querySelector('.delete-user-btn').style.backgroundColor = '#555';
-            }
-            userListDiv.appendChild(userDiv);
-        }
-
-        if (!hasUsers) {
-            userListDiv.innerHTML = '<p class="no-records">No users in the system yet. Add one!</p>';
-        }
-
-        // Add event listeners for delete buttons
-        document.querySelectorAll('.delete-user-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const usernameToDelete = e.target.dataset.username;
-                if (confirm(`Are you sure you want to delete user '${usernameToDelete}'?`)) {
-                    delete users[usernameToDelete];
-                    saveUsersData();
-                    renderUserList(); // Re-render the list
-                    alert(`User '${usernameToDelete}' deleted.`);
-                }
-            });
-        });
+    .profile-header {
+        flex-direction: column;
+        align-items: flex-end;
+        text-align: right;
     }
-
-
-    // --- Event Listeners ---
-    navButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const target = button.dataset.target;
-            if (target === 'logout') {
-                isLoggedIn = false;
-                loggedInUsername = '';
-                alert('You have logged out.');
-                updateLoginUI();
-            } else if (target === 'mdt-system' && !isLoggedIn) {
-                alert('Please login to access the MDT System.');
-                showSection('login');
-            } else if (target === 'admin-panel' && (users[loggedInUsername]?.role !== 'admin' || !isLoggedIn)) {
-                alert('You do not have administrative privileges to access this panel.');
-                showSection('home'); // Or current section
-            }
-             else {
-                showSection(target);
-            }
-        });
-    });
-
-    loginBtn.addEventListener('click', () => {
-        const username = usernameInput.value.trim();
-        const password = passwordInput.value.trim();
-
-        if (users[username] && users[username].password === password) {
-            isLoggedIn = true;
-            loggedInUsername = username;
-            playerPoints += 5; // Add 5 points on login
-            loginMessage.textContent = 'Login successful!';
-            usernameInput.value = '';
-            passwordInput.value = '';
-            updateLoginUI();
-        } else {
-            loginMessage.textContent = 'Invalid username or password.';
-        }
-    });
-
-    // Add Person to MDT (Civilian/Citizen)
-    addPersonBtn.addEventListener('click', () => {
-        newPersonOverlay.style.display = 'flex';
-        // Clear form fields
-        document.getElementById('personName').value = '';
-        document.getElementById('personID').value = '';
-        document.getElementById('personImage').value = '';
-        document.getElementById('personAge').value = '';
-        document.getElementById('personPhone').value = '';
-    });
-
-    cancelPersonBtn.addEventListener('click', () => {
-        newPersonOverlay.style.display = 'none';
-    });
-
-    createPersonBtn.addEventListener('click', () => {
-        const name = document.getElementById('personName').value.trim();
-        const id = document.getElementById('personID').value.trim();
-        const image = document.getElementById('personImage').value.trim();
-        const age = document.getElementById('personAge').value.trim();
-        const phone = document.getElementById('personPhone').value.trim();
-
-        if (name && id) {
-            if (peopleData[id]) {
-                alert('Person with this ID already exists!');
-                return;
-            }
-            peopleData[id] = {
-                name: name,
-                id: id,
-                image: image || 'https://via.placeholder.com/120/333333/FFFFFF?text=No+Image', // Default image
-                age: age || 'N/A',
-                phone: phone || 'N/A',
-                charges: [],
-                violations: [],
-                assets: []
-            };
-            savePeopleData();
-            alert(`Person '${name}' with ID '${id}' added to the system!`);
-            newPersonOverlay.style.display = 'none';
-            // Optionally, display the newly created profile
-            searchInput.value = name; // Auto-fill search
-            searchAndDisplayProfile();
-        } else {
-            alert('Name and ID are required!');
-        }
-    });
-
-    searchInput.addEventListener('input', searchAndDisplayProfile);
-
-
-    // --- Admin Panel User Management Logic ---
-    if (addUserBtn) { // Check if the button exists before adding listener
-        addUserBtn.addEventListener('click', () => {
-            addUserOverlay.style.display = 'flex';
-            newUsernameInput.value = '';
-            newUserPasswordInput.value = '';
-        });
+    .profile-image {
+        margin-left: 0;
+        margin-bottom: 20px;
     }
-
-    if (cancelCreateUserBtn) { // Check if the button exists
-        cancelCreateUserBtn.addEventListener('click', () => {
-            addUserOverlay.style.display = 'none';
-        });
+    .profile-actions, .section-actions {
+        justify-content: flex-end;
     }
-
-    if (createUserBtn) { // Check if the button exists
-        createUserBtn.addEventListener('click', () => {
-            const newUsername = newUsernameInput.value.trim();
-            const newUserPassword = newUserPasswordInput.value.trim();
-
-            if (newUsername && newUserPassword) {
-                if (users[newUsername]) {
-                    alert('Username already exists. Please choose a different one.');
-                    return;
-                }
-                users[newUsername] = {
-                    password: newUserPassword,
-                    role: 'officer' // New accounts are regular officers by default
-                };
-                saveUsersData();
-                alert(`User '${newUsername}' created successfully!`);
-                addUserOverlay.style.display = 'none';
-                renderUserList(); // Update the list of users
-            } else {
-                alert('Username and password are required!');
-            }
-        });
+    .record-item, .officer-item, .case-item, .rank-item {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
+        text-align: right;
     }
-
-
-    // --- MDT Profile Display & Edit Logic ---
-    function searchAndDisplayProfile() {
-        const searchTerm = searchInput.value.toLowerCase();
-        profileDetails.innerHTML = ''; // Clear previous profile
-        noProfileFoundMessage.style.display = 'none'; // Hide default message
-
-        let foundPerson = null;
-        for (const id in peopleData) {
-            if (peopleData[id].name.toLowerCase().includes(searchTerm) || id.toLowerCase().includes(searchTerm)) {
-                foundPerson = peopleData[id];
-                break;
-            }
-        }
-
-        if (foundPerson) {
-            displayPersonProfile(foundPerson);
-        } else {
-            noProfileFoundMessage.style.display = 'block'; // Show message if not found
-        }
+    .record-actions, .item-actions {
+        width: 100%;
+        justify-content: flex-end;
+        margin-right: 0;
     }
+}
 
-    function displayPersonProfile(person) {
-        profileDetails.innerHTML = `
-            <div class="profile-card">
-                <img src="${person.image}" alt="${person.name}">
-                <h3>${person.name}</h3>
-                <div class="profile-info">
-                    <p><strong>ID:</strong> <span>${person.id}</span></p>
-                    <p><strong>Age:</strong> <span>${person.age}</span></p>
-                    <p><strong>Phone:</strong> <span>${person.phone}</span></p>
-                </div>
-
-                <h4 class="profile-section-title">Charges</h4>
-                <div id="chargesList">
-                    ${person.charges.length > 0 ? person.charges.map((c, i) => `<div class="record-item"><strong>Charge ${i+1}:</strong> ${c} <button class="btn delete-record-btn" data-type="charge" data-index="${i}">Delete</button></div>`).join('') : '<p class="no-records">No charges on record.</p>'}
-                </div>
-                <div class="add-item-form">
-                    <input type="text" id="newChargeInput" placeholder="Add new charge">
-                    <button class="btn add-record-btn" data-type="charge">Add Charge</button>
-                </div>
-
-                <h4 class="profile-section-title">Violations</h4>
-                <div id="violationsList">
-                    ${person.violations.length > 0 ? person.violations.map((v, i) => `<div class="record-item"><strong>Violation ${i+1}:</strong> ${v} <button class="btn delete-record-btn" data-type="violation" data-index="${i}">Delete</button></div>`).join('') : '<p class="no-records">No violations on record.</p>'}
-                </div>
-                <div class="add-item-form">
-                    <input type="text" id="newViolationInput" placeholder="Add new violation">
-                    <button class="btn add-record-btn" data-type="violation">Add Violation</button>
-                </div>
-
-                <h4 class="profile-section-title">Assets</h4>
-                <div id="assetsList">
-                    ${person.assets.length > 0 ? person.assets.map((a, i) => `<div class="record-item"><strong>Asset ${i+1}:</strong> ${a} <button class="btn delete-record-btn" data-type="asset" data-index="${i}">Delete</button></div>`).join('') : '<p class="no-records">No assets on record.</p>'}
-                </div>
-                <div class="add-item-form">
-                    <input type="text" id="newAssetInput" placeholder="Add new asset">
-                    <button class="btn add-record-btn" data-type="asset">Add Asset</button>
-                </div>
-            </div>
-        `;
-
-        // Add event listeners for new buttons created above
-        document.querySelectorAll('.add-record-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const type = e.target.dataset.type;
-                let inputElement;
-                if (type === 'charge') inputElement = document.getElementById('newChargeInput');
-                else if (type === 'violation') inputElement = document.getElementById('newViolationInput');
-                else if (type === 'asset') inputElement = document.getElementById('newAssetInput');
-
-                const value = inputElement.value.trim();
-                if (value) {
-                    peopleData[person.id][`${type}s`].push(value);
-                    savePeopleData();
-                    displayPersonProfile(peopleData[person.id]); // Re-render profile to show new item
-                }
-            });
-        });
-
-        document.querySelectorAll('.delete-record-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const type = e.target.dataset.type;
-                const index = parseInt(e.target.dataset.index);
-                if (confirm(`Are you sure you want to delete this ${type}?`)) {
-                    peopleData[person.id][`${type}s`].splice(index, 1);
-                    savePeopleData();
-                    displayPersonProfile(peopleData[person.id]); // Re-render profile
-                }
-            });
-        });
+@media (max-width: 576px) {
+    .container {
+        margin: 10px auto;
+        border-radius: 0;
     }
-
-    // --- Initial Load ---
-    updateLoginUI(); // Check login status and update UI on page load
-});
+    header {
+        padding: 10px 15px;
+    }
+    .logo {
+        font-size: 26px;
+    }
+    .nav-btn {
+        padding: 8px 12px;
+        font-size: 15px;
+    }
+    .page-section {
+        padding: 20px 15px;
+    }
+    .auth-form, .overlay-content {
+        padding: 25px;
+        width: 100%;
+        border-radius: 0;
+    }
+    .btn {
+        padding: 10px 20px;
+        font-size: 16px;
+        margin-left: 10px;
+    }
+}
